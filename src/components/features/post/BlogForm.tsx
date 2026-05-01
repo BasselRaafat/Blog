@@ -109,7 +109,7 @@ export default function BlogForm({ mode }: BlogFormProp) {
 								className="w-full h-72 md:h-96 object-cover"
 							/>
 						) : (
-							<div className="w-full h-72 md:h-96 flex justify-center items-center bg-amber-100">
+							<div className="w-full h-72 md:h-96 flex justify-center items-center bg-gray-300">
 								Select a Cover Pictrue for your blog
 							</div>
 						)}
@@ -148,25 +148,31 @@ export default function BlogForm({ mode }: BlogFormProp) {
 					value={form.description}
 				/>
 				<CodeEditor handleChange={handleEditorChange} value={form.content} />
-				<button className="btn" type="submit" disabled={isLoading}>
-					{mode === "edit" ? (
-						patchMutation.isPending ? (
+				<div className="w-full flex justify-center items-center">
+					<button
+						className="btn m-4 bg-green-300"
+						type="submit"
+						disabled={isLoading}
+					>
+						{mode === "edit" ? (
+							patchMutation.isPending ? (
+								<>
+									Saving Edit
+									<span className="loading loading-spinner loading-xs"></span>
+								</>
+							) : (
+								"Save Edit"
+							)
+						) : postMutation.isPending ? (
 							<>
-								Saving Edit
+								Publishing Blog
 								<span className="loading loading-spinner loading-xs"></span>
 							</>
 						) : (
-							"Save Edit"
-						)
-					) : postMutation.isPending ? (
-						<>
-							Publishing Blog
-							<span className="loading loading-spinner loading-xs"></span>
-						</>
-					) : (
-						"Publish Blog"
-					)}
-				</button>
+							"Publish Blog"
+						)}
+					</button>
+				</div>
 			</form>
 		</div>
 	);
