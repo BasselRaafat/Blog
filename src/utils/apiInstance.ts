@@ -3,8 +3,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 axios.defaults.withCredentials = true;
 
 export const api = axios.create({
-	baseURL:
-		"https://blog-backend-3x280uojj-basselraafats-projects.vercel.app/api",
+	baseURL: "https://blog-backend-fawn-six.vercel.app/api",
 	timeout: 5000,
 });
 api.interceptors.request.use((config) => {
