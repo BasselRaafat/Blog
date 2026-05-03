@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { toast } from "react-toastify";
 import CodeEditor from "./CodeEditor";
+import { useForm, Controller, type SubmitHandler } from "react-hook-form";
 
 type BlogFormProp = {
 	mode?: string;
@@ -21,23 +22,32 @@ export default function BlogForm({ mode }: BlogFormProp) {
 		data?.coverPicPath ?? null,
 	);
 
-	const [form, setForm] = useState<BlogRequest>({
-		title: data?.title ?? "",
-		description: data?.description ?? "",
-		content: data?.content ?? "",
-		coverPic: undefined,
+	const {
+		register,
+		handleSubmit,
+		control,
+		reset,
+		formState: { errors },
+	} = useForm<BlogRequest>({
+		defaultValues: {
+			title: "",
+			description: "",
+			content: "",
+			coverPic: undefined,
+		}
 	});
 
 	useEffect(() => {
-		// eslint-disable-next-line react-hooks/set-state-in-effect
-		setForm({
-			title: data?.title ?? "",
-			description: data?.description ?? "",
-			content: data?.content ?? "",
-			coverPic: null,
-		});
-		setImageSrc(data?.coverPicPath);
-	}, [data]);
+		if (data) {
+			reset({
+				title: data.title ?? "",
+				description: data.description ?? "",
+				content: data.content ?? "",
+				coverPic: null,
+			});
+			setImageSrc(data.coverPicPath);
+		}
+	}, [data, reset]);
 
 	//-----------------------------------Use Effect
 	useEffect(() => {
@@ -50,34 +60,17 @@ export default function BlogForm({ mode }: BlogFormProp) {
 	}, [postMutation.error]);
 
 	//-------------------------------------Handlers
-	const handleEditorChange = (value: string) => {
-		const newForm = { ...form, content: value };
-		setForm(newForm);
-	};
-	const hanldeChange = (
-		e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>,
-	) => {
-		const { value, name, type, files } = e.target;
-		const newForm = {
-			...form,
-			[name]: type === "file" ? (files?.[0] ?? null) : value,
+	const coverPicRegister = register("coverPic", { required: mode === "edit" ? false : "Cover picture is required" });
+
+	const onSubmit: SubmitHandler<BlogRequest> = (formDataRHF) => {
+		const fileList = formDataRHF.coverPic as unknown as FileList;
+		const file = fileList && fileList.length > 0 ? fileList[0] : null;
+
+		const submitData = {
+			...formDataRHF,
+			coverPic: file,
 		};
-		if (type === "file" && files?.[0]) {
-			const file = files[0];
-			const imgUrl = URL.createObjectURL(file);
-			setImageSrc((prev) => {
-				if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
-				return imgUrl;
-			});
-		}
-
-		setForm(newForm);
-	};
-	const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
-		e.preventDefault();
-		console.log(form);
-
-		const formData = toFormData(form);
+		const formData = toFormData(submitData);
 		if (mode === "edit" && id) patchMutation.mutate({ id, formData });
 		else postMutation.mutate(formData);
 	};
@@ -97,7 +90,7 @@ export default function BlogForm({ mode }: BlogFormProp) {
 
 	return (
 		<div>
-			<form action="" onSubmit={handleSubmit}>
+			<form action="" onSubmit={handleSubmit(onSubmit)}>
 				{/* {!id ? ( */}
 				{/* <> */}
 				<label htmlFor="img" className="mb-2">
@@ -119,35 +112,55 @@ export default function BlogForm({ mode }: BlogFormProp) {
 					type="file"
 					id="img"
 					accept="image/*"
-					name="coverPic"
 					className="block file-input mb-4"
-					onChange={hanldeChange}
 					hidden={true}
+					{...coverPicRegister}
+					onChange={(e) => {
+						coverPicRegister.onChange(e);
+						const files = e.target.files;
+						if (files?.[0]) {
+							const file = files[0];
+							const imgUrl = URL.createObjectURL(file);
+							setImageSrc((prev) => {
+								if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+								return imgUrl;
+							});
+						}
+					}}
 				/>
+				{errors.coverPic && <span className="text-error text-sm block text-center w-full mb-4">{errors.coverPic.message}</span>}
 				<input
 					type="text"
-					name="title"
-					// {...register("title")}
 					id="title"
-					onChange={hanldeChange}
-					className="block w-full text-6xl p-4 outline-none"
+					className={`block w-full text-6xl p-4 outline-none ${errors.title ? "text-red-500 placeholder-red-300" : ""}`}
 					placeholder="Title"
-					value={form.title}
+					{...register("title", { required: "Title is required", minLength: { value: 5, message: "Title must be at least 5 characters" } })}
 				/>
+				{errors.title && <span className="text-error text-sm ml-4">{errors.title.message}</span>}
+
 				{/* <label htmlFor="description" className="mb-2">
 					description
 				</label> */}
 				<input
 					type="text"
-					name="description"
-					// {...register("description")}
 					id="description"
-					onChange={hanldeChange}
-					className="block w-full text-4xl p-4 outline-none"
+					className={`block w-full text-4xl p-4 outline-none ${errors.description ? "text-red-500 placeholder-red-300" : ""}`}
 					placeholder="Description"
-					value={form.description}
+					{...register("description", { required: "Description is required", minLength: { value: 10, message: "Description must be at least 10 characters" } })}
 				/>
-				<CodeEditor handleChange={handleEditorChange} value={form.content} />
+				{errors.description && <span className="text-error text-sm ml-4 mb-4 block">{errors.description.message}</span>}
+
+				<div className={errors.content ? "border-2 border-error p-1 rounded" : ""}>
+					<Controller
+						name="content"
+						control={control}
+						rules={{ required: "Content is required", minLength: { value: 20, message: "Content must be at least 20 characters" } }}
+						render={({ field }) => (
+							<CodeEditor handleChange={field.onChange} value={field.value as string} />
+						)}
+					/>
+				</div>
+				{errors.content && <span className="text-error text-sm mt-1 block">{errors.content.message}</span>}
 				<div className="w-full flex justify-center items-center">
 					<button
 						className="btn m-4 bg-green-300"

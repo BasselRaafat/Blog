@@ -25,7 +25,7 @@ export default function Login() {
 			<fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs p-4">
 				<legend className="fieldset-legend">Login</legend>
 				<form onSubmit={handleSubmit(onSubmit)}>
-					<label htmlFor="email" className="label">
+					<label htmlFor="email" className="label block p-1">
 						Email
 					</label>
 					<input
@@ -33,20 +33,32 @@ export default function Login() {
 						id="email"
 						className="input"
 						placeholder="Email"
-						{...register("email", { required: "Email is required" })}
-						// onChange={handleChange}
+						{...register("email", {
+							required: "Email is required",
+							pattern: {
+								value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+								message: "Invalid email address"
+							}
+						})}
+					// onChange={handleChange}
 					/>
-					{errors.email && <span>{errors.email.message}</span>}
+					{errors.email && <span className="text-error text-sm p-1 block">{errors.email.message}</span>}
 
-					<label className="label">Password</label>
+					<label className="label block p-1">Password</label>
 					<input
 						type="password"
 						className="input"
 						placeholder="Password"
-						{...register("password", { required: "password is required" })}
-						// onChange={handleChange}
+						{...register("password", {
+							required: "Password is required",
+							minLength: {
+								value: 6,
+								message: "Password must be at least 6 characters"
+							}
+						})}
+					// onChange={handleChange}
 					/>
-					{errors.password && <span>{errors.password.message}</span>}
+					{errors.password && <span className="text-error text-sm p-1 block">{errors.password.message}</span>}
 					<button
 						className="btn block btn-neutral mt-4"
 						disabled={loginMutation.isPending}

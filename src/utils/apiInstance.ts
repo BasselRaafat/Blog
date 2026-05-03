@@ -3,7 +3,8 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 axios.defaults.withCredentials = true;
 
 export const api = axios.create({
-	baseURL: "https://blog-backend-fawn-six.vercel.app/api",
+	// baseURL: "https://blog-backend-fawn-six.vercel.app/api",
+	baseURL: "http://localhost:3000/api",
 	timeout: 5000,
 });
 api.interceptors.request.use((config) => {
