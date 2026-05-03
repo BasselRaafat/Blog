@@ -6,6 +6,7 @@ export const api = axios.create({
 	// baseURL: "https://blog-backend-fawn-six.vercel.app/api",
 	baseURL: "https://blog-backend-fawn-six.vercel.app/api",
 	timeout: 5000,
+	withCredentials: true,
 });
 api.interceptors.request.use((config) => {
 	const token = localStorage.getItem("accessToken");
